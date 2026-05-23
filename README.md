@@ -38,3 +38,52 @@ The classifier analyzes email content, links, sender information, and suspicious
 - NLP Basics
 
 ---
+
+```bash
+anti-phishing-email-classifier/
+│
+├── README.md
+├── pom.xml
+├── build-all.bat
+├── run-backend.bat
+├── run-frontend.bat
+|
+├── backend/
+│   ├── pom.xml
+│   └── src/
+│       └── main/
+│           ├── java/
+│           │   └── com/
+│           │       └── antiphishing/
+│           │           └── backend/
+│           │               ├── AntiPhishingApplication.java
+│           │               ├── config/
+│           │               │   └── WebSocketConfig.java
+│           │               ├── controller/
+│           │               │   └── PhishingController.java
+│           │               ├── entity/
+│           │               │   └── EmailAnalysis.java
+│           │               ├── repository/
+│           │               │   └── EmailAnalysisRepository.java
+│           │               └── service/
+│           │                   ├── FeatureExtractor.java
+│           │                   └── PhishingDetectionService.java
+│           └── resources/
+│               ├── application.properties
+│               └── schema.sql
+│
+└── frontend/
+    ├── pom.xml
+    └── src/
+        └── main/
+            └── webapp/
+                ├── package.json
+                ├── public/
+                │   └── index.html
+                └── src/
+                    ├── App.js
+                    ├── App.css
+                    └── components/
+                        ├── EmailAnalyzer.js
+                        ├── Dashboard.js
+                        └── AnalysisHistory.js
