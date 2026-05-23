@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Anti-Phishing Email Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            opacity: 0.9;
+            font-size: 1.1em;
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            padding: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .form-section, .results-section {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        textarea {
+            height: 120px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+            width: 100%;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .phishing {
+            border-left-color: #e74c3c;
+            background: #ffeaea;
+        }
+
+        .legitimate {
+            border-left-color: #27ae60;
+            background: #eaffea;
+        }
+
+        .confidence-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #e74c3c);
+            transition: width 0.5s;
+        }
+
+        .statistics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        .stat-number {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #2c3e50;
+        }
+
+        .stat-label {
+            font-size: 0.9em;
+            color: #7f8c8d;
+        }
+
+        .feature-list {
+            margin-top: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: #667eea;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🛡️ Anti-Phishing Email Classifier</h1>
+        <p>Protect yourself from phishing attacks with email analysis</p>
+    </div>
+
+    <div class="content">
+        <div class="form-section">
+            <h2>Analyze Email</h2>
+            <form id="emailForm">
+                <div class="form-group">
+                    <label for="sender">Sender:</label>
+                    <input type="text" id="sender" placeholder="e.g., security@yourbank.com" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="subject">Subject:</label>
+                    <input type="text" id="subject" placeholder="e.g., Urgent: Account Verification Required" required>
+                </div>
+
+                <div class="form-group">
+                    <label for="body">Email Body:</label>
+                    <textarea id="body" placeholder="Paste the email content here..." required></textarea>
+                </div>
+
+                <button type="submit" class="btn">Analyze Email</button>
+            </form>
+
+            <div id="loading" class="loading hidden">
+                <p>Analyzing email for phishing indicators...</p>
+            </div>
+        </div>
+
+        <div class="results-section">
+            <h2>Analysis Results</h2>
+            <div id="results"></div>
+
+            <div class="statistics">
+                <div class="stat-card">
+                    <div class="stat-number" id="totalEmails">0</div>
+                    <div class="stat-label">Total Analyzed</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="phishingCount">0</div>
+                    <div class="stat-label">Phishing Detected</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const API_BASE = '/api/emails';
+
+    document.getElementById('emailForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const loading = document.getElementById('loading');
+        const results = document.getElementById('results');
+
+        loading.classList.remove('hidden');
+        results.innerHTML = '';
+
+        const emailData = {
+            sender: document.getElementById('sender').value,
+            subject: document.getElementById('subject').value,
+            body: document.getElementById('body').value,
+            recipient: 'user@example.com'
+        };
+
+        try {
+            const response = await fetch(API_BASE + '/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(emailData)
+            });
+
+            const result = await response.json();
+            displayResults(result);
+            updateStatistics();
+        } catch (error) {
+            results.innerHTML = `
+                <div class="result-card phishing">
+                    <h3>Error</h3>
+                    <p>Failed to analyze email. Please try again.</p>
+                </div>
+            `;
+        } finally {
+            loading.classList.add('hidden');
+        }
+    });
+
+    function displayResults(email) {
+        const results = document.getElementById('results');
+        const isPhishing = email.isPhishing;
+        const confidence = email.confidenceScore * 100;
+        const features = JSON.parse(email.features || '{}');
+
+        const resultHTML = `
+            <div class="result-card ${isPhishing ? 'phishing' : 'legitimate'}">
+                <h3>${isPhishing ? '🚨 PHISHING EMAIL DETECTED' : '✅ LEGITIMATE EMAIL'}</h3>
+                <p>Confidence: <strong>${confidence.toFixed(1)}%</strong></p>
+
+                <div class="confidence-bar">
+                    <div class="confidence-fill" style="width: ${confidence}%"></div>
+                </div>
+
+                <div class="feature-list">
+                    <h4>Analysis Details:</h4>
+                    ${Object.entries(features).map(([key, value]) => `
+                        <div class="feature-item">
+                            <span>${formatFeatureName(key)}:</span>
+                            <strong>${formatFeatureValue(value)}</strong>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: ${isPhishing ? '#ffebee' : '#e8f5e8'}; border-radius: 5px;">
+                    <strong>Recommendation:</strong>
+                    ${isPhishing ?
+                        'Do not click any links or provide personal information. Delete this email.' :
+                        'This email appears to be safe. Always verify sender authenticity.'}
+                </div>
+            </div>
+        `;
+
+        results.innerHTML = resultHTML;
+    }
+
+    function formatFeatureName(key) {
+        return key.split('_').map(word =>
+            word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' ');
+    }
+
+    function formatFeatureValue(value) {
+        if (typeof value === 'boolean') {
+            return value ? 'Yes' : 'No';
+        }
+        return value;
+    }
+
+    async function updateStatistics() {
+        try {
+            const response = await fetch(API_BASE + '/statistics');
+            const stats = await response.json();
+
+            document.getElementById('totalEmails').textContent = stats.totalEmails;
+            document.getElementById('phishingCount').textContent = stats.phishingCount;
+        } catch (error) {
+            console.error('Failed to fetch statistics:', error);
+        }
+    }
+
+    // Load initial statistics
+    updateStatistics();
+</script>
+</body>
+</html>

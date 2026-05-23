@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Details - Anti-Phishing Classifier</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #2c3e50, #34495e);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .nav {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .nav a {
+            margin-right: 20px;
+            text-decoration: none;
+            color: #667eea;
+            font-weight: 500;
+        }
+
+        .content {
+            padding: 30px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .content {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .email-details, .analysis-results {
+            background: #f8f9fa;
+            padding: 25px;
+            border-radius: 10px;
+            border: 1px solid #e9ecef;
+        }
+
+        .detail-group {
+            margin-bottom: 20px;
+        }
+
+        .detail-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .detail-value {
+            background: white;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+        }
+
+        .result-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid #667eea;
+            margin-bottom: 20px;
+        }
+
+        .phishing {
+            border-left-color: #e74c3c;
+            background: #ffeaea;
+        }
+
+        .legitimate {
+            border-left-color: #27ae60;
+            background: #eaffea;
+        }
+
+        .confidence-bar {
+            height: 10px;
+            background: #ecf0f1;
+            border-radius: 5px;
+            margin: 10px 0;
+            overflow: hidden;
+        }
+
+        .confidence-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #e74c3c);
+        }
+
+        .feature-list {
+            margin-top: 15px;
+        }
+
+        .feature-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin-right: 10px;
+        }
+
+        .delete-btn {
+            background: #e74c3c;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>📋 Email Analysis Details</h1>
+        <p>Complete breakdown of the email analysis</p>
+    </div>
+
+    <div class="nav">
+        <a href="/">🏠 Analyze New Email</a>
+        <a href="/emails">📋 All Emails</a>
+        <a th:href="@{/emails/{type}(type=${email.phishing ? 'phishing' : 'legitimate'})}">
+            <span th:if="${email.isPhishing}">🚨 Back to Phishing Emails</span>
+            <span th:unless="${email.isPhishing}">✅ Back to Legitimate Emails</span>
+        </a>
+    </div>
+
+    <div class="content">
+        <div class="email-details">
+            <h2>Email Information</h2>
+            <div class="detail-group">
+                <div class="detail-label">ID:</div>
+                <div class="detail-value" th:text="${email.id}">1</div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Sender:</div>
+                <div class="detail-value" th:text="${email.sender}">sender@example.com</div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Recipient:</div>
+                <div class="detail-value" th:text="${email.recipient}">recipient@example.com</div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Subject:</div>
+                <div class="detail-value" th:text="${email.subject}">Email Subject</div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Body:</div>
+                <div class="detail-value" style="white-space: pre-wrap;" th:text="${email.body}">Email body content...</div>
+            </div>
+            <div class="detail-group">
+                <div class="detail-label">Analyzed At:</div>
+                <div class="detail-value" th:text="${#temporals.format(email.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 12:00:00</div>
+            </div>
+        </div>
+
+        <div class="analysis-results">
+            <h2>Analysis Results</h2>
+            <div th:class="${email.isPhishing} ? 'result-card phishing' : 'result-card legitimate'">
+                <h3 th:text="${email.isPhishing} ? '🚨 PHISHING EMAIL DETECTED' : '✅ LEGITIMATE EMAIL'"></h3>
+                <p>Confidence: <strong th:text="${#numbers.formatDecimal(email.confidenceScore * 100, 1, 1)} + '%'">85%</strong></p>
+
+                <div class="confidence-bar">
+                    <div class="confidence-fill" th:style="'width: ' + ${email.confidenceScore * 100} + '%;'"></div>
+                </div>
+
+                <div class="feature-list" th:if="${email.features}">
+                    <h4>Analysis Details:</h4>
+                    <div th:each="feature : ${@jsonHelper.parseFeatures(email.features)}" class="feature-item">
+                        <span th:text="${feature.key}">Feature Name</span>
+                        <strong th:text="${feature.value}">Feature Value</strong>
+                    </div>
+                </div>
+
+                <div style="margin-top: 15px; padding: 10px; background: ${email.isPhishing} ? '#ffebee' : '#e8f5e8'; border-radius: 5px;">
+                    <strong>Recommendation:</strong>
+                    <span th:if="${email.isPhishing}">
+                            Do not click any links or provide personal information. Delete this email.
+                        </span>
+                    <span th:unless="${email.isPhishing}">
+                            This email appears to be safe. Always verify sender authenticity.
+                        </span>
+                </div>
+            </div>
+
+            <div style="margin-top: 20px; text-align: center;">
+                <a th:href="@{/}" class="btn">Analyze Another Email</a>
+                <button class="btn delete-btn" onclick="deleteEmail([[${email.id}]])">Delete This Analysis</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function deleteEmail(id) {
+        if (confirm('Are you sure you want to delete this email analysis?')) {
+            fetch('/api/emails/' + id, {
+                method: 'DELETE'
+            })
+            .then(response => {
+                if (response.ok) {
+                    window.location.href = '/emails';
+                } else {
+                    alert('Error deleting email');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error deleting email');
+            });
+        }
+    }
+</script>
+</body>
+</html>
